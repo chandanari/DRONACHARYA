@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; background: linear-gradient(45deg, #1e3a8a, #3b82f6); height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; }
+        .login-box { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); width: 340px; text-align: center; }
+        .logo { width: 80px; margin-bottom: 10px; }
+        h1 { color: #1e3a8a; font-size: 35px; margin-bottom: 25px; font-weight: 800; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 15px; top: 15px; color: #667eea; }
+        input { font-size: 20px; width: 100%; padding: 12px 12px 12px 45px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 14px; background: #1e3a8a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 20px; transition: 0.3s; box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3); }
+        button:hover { background: #1e40af; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <img src="https://drive.google.com/thumbnail?id=1fCf01Mr_bRA10Npc1TGWfEYxD0JX9Nh0&sz=w800" class="logo">
+        <h1>দ্রোণাচার্য ডিফেন্স্ একাডেমী</h1>
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input id="user" type="text" placeholder="Username">
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input id="pass" type="password" placeholder="Password">
+        </div>
+        <button onclick="login()"><i class="fas fa-sign-in-alt"></i> লগইন করুন</button>
+    </div>
+    <script>
+        function login(){
+            const u = document.getElementById("user").value;
+            const p = document.getElementById("pass").value;
+            if(!u || !p) return alert("সব তথ্য দিন");
+            fetch(API + `?action=login&username=${u}&password=${p}`)
+            .then(r => r.text()).then(role => {
+                if(role !== "fail") {
+                    localStorage.setItem("user", u);
+                    window.location.href = "dashboard.html";
+                } else alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+            });
+        }
+    </script>
+</body>
+</html>
