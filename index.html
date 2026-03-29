@@ -1,21 +1,87 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <!-- Viewport-e height=device-height jog kora hoyeche jate keyboard auto-adjust hoy -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height">
     <title>Login</title>
     <script src="config.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; background: linear-gradient(45deg, #1e3a8a, #3b82f6); height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; }
-        .login-box { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); width: 340px; text-align: center; }
+        /* Body-te overflow-y: auto dewa hoyeche jate keyboard ashole scroll kora jay */
+        body { 
+            font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; 
+            background: linear-gradient(45deg, #1e3a8a, #3b82f6); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; /* Center-er bodole column kora hoyeche */
+            justify-content: center; 
+            align-items: center; 
+            margin: 0; 
+            overflow-y: auto; 
+            padding: 20px 0; /* Keyboard-er somoy upore niche extra space */
+        }
+
+        .login-box { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 30px; 
+            border-radius: 25px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
+            width: 85%; /* Mobile-e width responsive kora hoyeche */
+            max-width: 340px; 
+            text-align: center; 
+            transition: transform 0.3s ease;
+        }
+
+        /* Keyboard ashar somoy input field focus hole box-tike ektu upore push korbe */
+        .login-box:focus-within {
+            transform: translateY(-20px);
+        }
+
         .logo { width: 80px; margin-bottom: 10px; }
         h1 { color: #1e3a8a; font-size: 20px; margin-bottom: 25px; font-weight: 800; }
         .input-group { position: relative; margin-bottom: 20px; }
         .input-group i { position: absolute; left: 15px; top: 15px; color: #667eea; }
-        input { font-size: 20px; width: 100%; padding: 12px 12px 12px 45px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus { border-color: #3b82f6; }
-        button { width: 100%; padding: 14px; background: #1e3a8a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 20px; transition: 0.3s; box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3); }
+        
+        input { 
+            font-size: 18px; 
+            width: 100%; 
+            padding: 12px 12px 12px 45px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            outline: none; 
+            transition: 0.3s; 
+        }
+        
+        input:focus { 
+            border-color: #3b82f6; 
+            background-color: #fff;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #1e3a8a; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 20px; 
+            transition: 0.3s; 
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3); 
+            margin-top: 10px;
+        }
+        
         button:hover { background: #1e40af; transform: translateY(-2px); }
+
+        /* Choto screen-er jonno (Mobile Landscape/Small Keyboard) */
+        @media (max-height: 500px) {
+            .login-box { padding: 15px; transform: translateY(0); }
+            .logo { width: 50px; }
+            h1 { margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -32,17 +98,32 @@
         </div>
         <button onclick="login()"><i class="fas fa-sign-in-alt"></i> লগইন করুন</button>
     </div>
+
     <script>
         function login(){
             const u = document.getElementById("user").value;
             const p = document.getElementById("pass").value;
             if(!u || !p) return alert("সব তথ্য দিন");
+            
+            // Login button disable kora jate bar bar click na hoy
+            const btn = document.querySelector('button');
+            btn.innerHTML = "অপেক্ষা করুন...";
+            btn.disabled = true;
+
             fetch(API + `?action=login&username=${u}&password=${p}`)
             .then(r => r.text()).then(role => {
                 if(role !== "fail") {
                     localStorage.setItem("user", u);
                     window.location.href = "dashboard.html";
-                } else alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+                } else {
+                    alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> লগইন করুন';
+                    btn.disabled = false;
+                }
+            }).catch(err => {
+                alert("নেটওয়ার্ক সমস্যা!");
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> লগইন করুন';
+                btn.disabled = false;
             });
         }
     </script>
