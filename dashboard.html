@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Noto Serif Bengali', sans-serif; background: #f0f4f8; margin: 0; padding-bottom: 30px; }
+        .top-bar { background: #1e3a8a; color: white; padding: 25px; text-align: center; border-radius: 0 0 30px 30px; }
+        .top-bar img { width: 50px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 25px 10px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); cursor: pointer; border-bottom: 5px solid #3b82f6; transition: 0.3s; }
+        .card:hover { transform: scale(1.05); background: #3b82f6; color: white; }
+        .card i { font-size: 35px; margin-bottom: 10px; display: block; color: #1e3a8a; }
+        .card:hover i { color: white; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <img src="https://cdn-icons-png.flaticon.com/128/3135/3135715.png"><br>
+        <h2 style="margin:5px 0;">দ্রোণাচার্য ডিফেন্স্ একাডেমী</h2>
+    </div>
+    <div id="list" class="grid"></div>
+    <script>
+        fetch(API + "?action=subjects").then(r => r.json()).then(data => {
+            let h = "";
+            data.forEach(s => {
+                h += `<div class="card" onclick="sel('${s}')"><i class="fas fa-book-open"></i><b>${s}</b></div>`;
+            });
+            document.getElementById("list").innerHTML = h;
+        });
+        function sel(s) { localStorage.setItem("subject", s); location = "chapters.html"; }
+    </script>
+</body>
+</html>
