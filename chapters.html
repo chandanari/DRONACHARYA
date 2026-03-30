@@ -5,38 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chapters</title>
     <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; background: #eef2ff; margin: 0; padding: 0; }
+        body { font-family: 'Noto Sans Bengali', sans-serif; background: #eef2ff; margin: 0; padding: 0; }
         .header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 30px 15px; text-align: center; border-radius: 0 0 40px 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .logo { width: 60px; margin-bottom: 10px; }
         
         /* Search Bar Styling */
-        .search-container {
-            max-width: 500px;
-            margin: -25px auto 10px auto;
-            padding: 0 25px;
-        }
-        .search-box {
-            background: white;
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            border-radius: 50px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
-        .search-box input {
-            border: none;
-            outline: none;
-            width: 100%;
-            font-size: 16px;
-            margin-left: 10px;
-            font-family: 'Shonar Bangla', sans-serif;
-        }
+        .search-container { max-width: 500px; margin: -25px auto 10px auto; padding: 0 25px; }
+        .search-box { background: white; display: flex; align-items: center; padding: 12px 20px; border-radius: 50px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .search-box input { border: none; outline: none; width: 100%; font-size: 16px; margin-left: 10px; font-family: 'Hind Siliguri', sans-serif; }
         .search-box i { color: #1e3a8a; }
 
-        .container { padding: 15px 25px; max-width: 500px; margin: 0 auto; }
+        /* Loading Spinner Styling */
+        .loading-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; color: #1e3a8a; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #dbeafe; border-top: 4px solid #1e3a8a; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .container { padding: 15px 25px; max-width: 500px; margin: 0 auto; min-height: 200px; }
         .chap-card { 
             background: white; padding: 18px; margin-bottom: 15px; border-radius: 18px;
             display: flex; justify-content: space-between; align-items: center;
@@ -44,12 +31,11 @@
             transition: all 0.3s ease; border-left: 8px solid #3b82f6;
         }
         .chap-card:hover { transform: translateX(10px); background: #3b82f6; color: white; }
-        .chap-name { font-size: 18px; font-weight: 600; }
+        .chap-name { font-size: 17px; font-weight: 600; }
         .play-btn { background: #dbeafe; color: #1e3a8a; padding: 8px 15px; border-radius: 50px; font-size: 12px; font-weight: 800; }
         .chap-card:hover .play-btn { background: white; color: #3b82f6; }
         
-        /* No Result Message */
-        #no-result { text-align: center; color: #64748b; margin-top: 20px; display: none; }
+        #no-result { text-align: center; color: #64748b; margin-top: 20px; display: none; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -59,7 +45,6 @@
     <h2 id="current-sub" style="margin:0;">বিষয়</h2>
 </div>
 
-<!-- Search Bar HTML -->
 <div class="search-container">
     <div class="search-box">
         <i class="fas fa-search"></i>
@@ -68,38 +53,56 @@
 </div>
 
 <div class="container" id="chap-list">
-    <p style="text-align:center;">অপেক্ষা করুন...</p>
+    <!-- Default Loading State -->
+    <div class="loading-wrapper">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; font-size: 16px;">অধ্যায় লোড হচ্ছে, অপেক্ষা করুন...</div>
+    </div>
 </div>
-<div id="no-result">কোনো অধ্যায় খুঁজে পাওয়া যায়নি!</div>
+
+<div id="no-result">কোনো অধ্যায় খুঁজে পাওয়া যায়নি!</div>
 
 <script>
-    const sub = localStorage.getItem("subject");
+    const sub = localStorage.getItem("subject") || "বিষয়";
     document.getElementById("current-sub").innerText = sub;
 
-    let chaptersData = []; // সব অধ্যায় জমা রাখার জন্য
+    // ১. ব্যাক বাটন হ্যান্ডেল করা (dashboard.html-এ ফেরত পাঠাবে)
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function() {
+        window.location.href = "dashboard.html";
+    };
 
+    let chaptersData = [];
+
+    // ডেটা ফেচ করা
     fetch(API + `?action=chapters&subject=${encodeURIComponent(sub)}`)
     .then(r => r.json())
     .then(data => {
         chaptersData = data;
         displayChapters(data);
+    })
+    .catch(err => {
+        document.getElementById("chap-list").innerHTML = "<p style='text-align:center; color:red;'>ডেটা লোড করতে সমস্যা হয়েছে।</p>";
     });
 
-    // অধ্যায়গুলো দেখানোর ফাংশন
     function displayChapters(data) {
         let list = document.getElementById("chap-list");
+        if (!data || data.length === 0) {
+            list.innerHTML = "<p style='text-align:center; font-weight:600;'>কোনো অধ্যায় পাওয়া যায়নি</p>";
+            return;
+        }
+
         let html = "";
         data.forEach(c => {
             html += `
                 <div class="chap-card" onclick="startQuiz('${c}')">
-                    <span class="chap-name"><i class="fas fa-book-reader"></i> ${c}</span>
+                    <span class="chap-name"><i class="fas fa-book-reader" style="margin-right:8px;"></i> ${c}</span>
                     <span class="play-btn">START</span>
                 </div>`;
         });
-        list.innerHTML = html || "<p style='text-align:center;'>কোনো অধ্যায় নেই</p>";
+        list.innerHTML = html;
     }
 
-    // সার্চ ফিল্টার ফাংশন
     function filterChapters() {
         let searchTerm = document.getElementById("searchInput").value.toLowerCase();
         let cards = document.getElementsByClassName("chap-card");
@@ -115,8 +118,6 @@
                 cards[i].style.display = "none";
             }
         }
-
-        // যদি কিছু খুঁজে না পাওয়া যায়
         noResult.style.display = found ? "none" : "block";
     }
 
