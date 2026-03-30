@@ -1,36 +1,133 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; background: #f0f4f8; margin: 0; padding-bottom: 30px; }
-        .top-bar { background: #1e3a8a; color: white; padding: 25px; text-align: center; border-radius: 0 0 30px 30px; }
-        .top-bar img { width: 50px; }
+        body { font-family: 'Noto Sans Bengali', sans-serif; background: #f0f4f8; margin: 0; padding-bottom: 30px; overflow-x: hidden; }
+        
+        .top-bar { background: #1e3a8a; color: white; padding: 25px; text-align: center; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .top-bar img { width: 60px; margin-bottom: 10px; }
+        
+        /* Loading Spinner Styling */
+        #loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; }
+        .spinner { width: 45px; height: 45px; border: 5px solid #dbeafe; border-top: 5px solid #1e3a8a; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 25px 10px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); cursor: pointer; border-bottom: 5px solid #3b82f6; transition: 0.3s; }
-        .card:hover { transform: scale(1.05); background: #3b82f6; color: white; }
+        
+        .card { 
+            background: white; padding: 25px 10px; border-radius: 20px; text-align: center; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); cursor: pointer; 
+            border-bottom: 5px solid #3b82f6; transition: 0.3s; 
+        }
+        .card:hover { transform: translateY(-5px); background: #3b82f6; color: white; }
         .card i { font-size: 35px; margin-bottom: 10px; display: block; color: #1e3a8a; }
         .card:hover i { color: white; }
+
+        /* Exit Modal Styling */
+        #exitModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.8); z-index: 9999; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white; width: 85%; max-width: 320px; padding: 30px; 
+            border-radius: 25px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal-content h3 { margin: 0 0 15px; color: #1e293b; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .m-btn { 
+            padding: 12px 25px; border: none; border-radius: 12px; 
+            font-weight: 700; cursor: pointer; flex: 1; transition: 0.2s; 
+        }
+        .btn-yes { background: #ef4444; color: white; }
+        .btn-no { background: #e2e8f0; color: #475569; }
+        .m-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
+
     <div class="top-bar">
         <img src="https://drive.google.com/thumbnail?id=1qaK0xgxuZhkiz38tsO_bryO9lraEmxyX&sz=w800"><br>
         <h2 style="margin:5px 0;">দ্রোণাচার্য ডিফেন্স্ একাডেমী</h2>
     </div>
+
+    <!-- Loading State -->
+    <div id="loading-box">
+        <div class="spinner"></div>
+        <b style="color: #64748b;">বিষয় লোড হচ্ছে...</b>
+    </div>
+
     <div id="list" class="grid"></div>
+
+    <!-- Exit Confirmation Modal -->
+    <div id="exitModal">
+        <div class="modal-content">
+            <i class="fas fa-sign-out-alt" style="font-size: 40px; color: #1e3a8a; margin-bottom: 15px;"></i>
+            <h3>আপনি কি অ্যাপ থেকে বের হতে চান?</h3>
+            <div class="modal-btns">
+                <button class="m-btn btn-no" onclick="closeModal()">না</button>
+                <button class="m-btn btn-yes" onclick="exitApp()">হ্যাঁ</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        fetch(API + "?action=subjects").then(r => r.json()).then(data => {
+        // ১. বিষয় লোড করা এবং স্পিনার হ্যান্ডেল করা
+        fetch(API + "?action=subjects")
+        .then(r => r.json())
+        .then(data => {
             let h = "";
             data.forEach(s => {
-                h += `<div class="card" onclick="sel('${s}')"><i class="fas fa-book-open"></i><b>${s}</b></div>`;
+                h += `<div class="card" onclick="sel('${s}')">
+                        <i class="fas fa-book-open"></i>
+                        <b>${s}</b>
+                      </div>`;
             });
+            document.getElementById("loading-box").style.display = "none";
             document.getElementById("list").innerHTML = h;
+        })
+        .catch(err => {
+            document.getElementById("loading-box").innerHTML = "ডেটা লোড করতে সমস্যা হয়েছে।";
         });
-        function sel(s) { localStorage.setItem("subject", s); location = "chapters.html"; }
+
+        function sel(s) { 
+            localStorage.setItem("subject", s); 
+            location = "chapters.html"; 
+        }
+
+        // ২. মোবাইলের ব্যাক বাটন এবং এক্সিট হ্যান্ডেলিং
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = function () {
+            document.getElementById("exitModal").style.display = "flex";
+            // ব্যাক বাটন আটকাতে হিস্ট্রি পুশ রাখা
+            window.history.pushState(null, null, window.location.href);
+        };
+
+        function closeModal() {
+            document.getElementById("exitModal").style.display = "none";
+        }
+
+        function exitApp() {
+            // যদি এটি একটি ওয়েব অ্যাপ হয়, তবে হোম পেজে পাঠানো বা উইন্ডো ক্লোজ করার চেষ্টা
+            if (navigator.app) {
+                navigator.app.exitApp();
+            } else if (navigator.device) {
+                navigator.device.exitApp();
+            } else {
+                window.close();
+                // সাধারণ ব্রাউজারে অনেক সময় window.close কাজ করে না, সেক্ষেত্রে রিডাইরেক্ট
+                location.href = "about:blank"; 
+            }
+        }
     </script>
 </body>
 </html>
