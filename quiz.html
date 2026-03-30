@@ -5,48 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
     <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Shonar Bangla', Adorsholipi, Noto Serif Bengali, Tiro Bangla, Segoe UI, sans-serif; background: #f8fafc; margin: 0; padding-bottom: 80px; }
-        .header { background: #1e3a8a; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .q-card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .question-text { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #060a0f; }
+        body { font-family: 'Noto Sans Bengali', sans-serif; background: #f0f4f8; margin: 0; padding-bottom: 80px; }
+        .header { background: #1e3a8a; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; min-height: 200px; }
+        
+        /* Loading Spinner Styling */
+        .loading-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 50px;
+            color: #1e3a8a;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #1e3a8a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .q-card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .question-text { font-size: 19px; font-weight: 600; margin-bottom: 15px; color: #1e293b; line-height: 1.5; }
         
         .option { 
-            display: block; background: #f1f5f9; padding: 14px; margin: 10px 0; 
-            border-radius: 10px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; 
+            display: block; background: #ffffff; padding: 14px; margin: 10px 0; 
+            border-radius: 12px; cursor: pointer; transition: all 0.2s ease; border: 2px solid #e2e8f0; 
+            color: #475569; font-weight: 500;
         }
-        .option:hover { background: #e2e8f0; border-color: #cbd5e1; }
+        .option:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-2px); }
 
-        /* Feedback Colors */
-        .option.correct { background: #dcfce7 !important; border-color: #166534 !important; color: #166534; font-weight: 600; }
-        .option.wrong { background: #fee2e2 !important; border-color: #991b1b !important; color: #991b1b; }
+        .option.correct { background: #10b981 !important; border-color: #059669 !important; color: white !important; }
+        .option.wrong { background: #ef4444 !important; border-color: #dc2626 !important; color: white !important; }
         .disabled { pointer-events: none; opacity: 0.8; }
 
-        .footer-btn { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); text-align: center; }
-        .submit-btn { font-family: 'Shonar Bangla', Adorsholipi; background: #1e3a8a; color: white; padding: 12px 40px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .footer-btn { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); text-align: center; }
+        .submit-btn { background: #1e3a8a; color: white; padding: 14px 50px; border: none; border-radius: 50px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3); }
 
-        /* Professional Modal Styling */
+        /* Modal Styling */
         #resultModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;
+            background: rgba(15, 23, 42, 0.9); z-index: 2000; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
         }
         .modal-content {
-            background: white; width: 85%; max-width: 400px; padding: 30px; 
-            border-radius: 25px; text-align: center; animation: popUp 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            background: white; width: 85%; max-width: 380px; padding: 0; 
+            border-radius: 30px; text-align: center; overflow: hidden;
+            animation: modalSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        @keyframes popUp {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        @keyframes modalSlideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-        .modal-score { font-size: 45px; font-weight: 800; color: #1e3a8a; margin: 15px 0; }
-        .modal-msg { font-size: 18px; color: #475569; margin-bottom: 25px; line-height: 1.5; }
+        .modal-header { padding: 30px 20px; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; }
+        #modal-icon { font-size: 70px; margin-bottom: 10px; display: block; }
+        
+        .modal-body { padding: 30px 25px; }
+        .modal-score { font-size: 48px; font-weight: 800; color: #1e3a8a; margin: 5px 0; }
+        .modal-stats { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
+        .stat-val { display: block; font-size: 20px; font-weight: 700; color: #1e293b; }
+        .stat-label { font-size: 12px; color: #64748b; font-weight: 600; }
+        .modal-msg { font-size: 18px; color: #334155; margin-bottom: 25px; font-weight: 600; }
         .modal-btn { 
-            background: #1e3a8a; color: white; border: none; padding: 12px 30px; 
-            border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%;
+            background: #1e3a8a; color: white; border: none; padding: 15px; 
+            border-radius: 15px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%;
         }
+
+        .result-success .modal-header { background: linear-gradient(135deg, #059669, #10b981); }
+        .result-success .modal-score { color: #059669; }
+        .result-fail .modal-header { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .result-fail .modal-score { color: #dc2626; }
     </style>
 </head>
 <body>
@@ -55,106 +94,145 @@
     <h3 id="chap-name" style="margin:0;">অপেক্ষা করুন...</h3>
 </div>
 
-<div class="container" id="quiz-container"></div>
-
-<div class="footer-btn">
-    <button class="submit-btn" onclick="showResults()">পরীক্ষা শেষ করুন</button>
+<div class="container" id="quiz-container">
+    <!-- Default Loading State -->
+    <div class="loading-wrapper">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; font-size: 18px;">প্রশ্ন লোড হচ্ছে, অপেক্ষা করুন...</div>
+    </div>
 </div>
 
+<div class="footer-btn">
+    <button class="submit-btn" onclick="showResults()">পরীক্ষা শেষ করুন <i class="fas fa-paper-plane" style="margin-left:8px;"></i></button>
+</div>
+
+<!-- Modal Structure -->
 <div id="resultModal">
-    <div class="modal-content">
-        <div id="modal-icon" style="font-size: 60px; margin-bottom: 10px;"></div>
-        <h2 style="margin:0; color: #1e3a8a;">আপনার ফলাফল</h2>
-        <div class="modal-score" id="modal-score-text">0/0</div>
-        <p class="modal-msg" id="modal-msg-text"></p>
-        <button class="modal-btn" onclick="closeAndGoBack()">ফিরে যান</button>
+    <div class="modal-content" id="modal-container">
+        <div class="modal-header">
+            <div id="modal-icon">🏆</div>
+            <h2 style="margin:0; font-weight: 700;">আপনার ফলাফল</h2>
+        </div>
+        <div class="modal-body">
+            <div class="modal-score" id="modal-score-text">0 / 0</div>
+            <div class="modal-stats">
+                <div class="stat-item">
+                    <span class="stat-val" id="modal-touch-count">0</span>
+                    <span class="stat-label">টাচ করেছেন</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-val" id="modal-accuracy">0%</span>
+                    <span class="stat-label">সঠিকতা</span>
+                </div>
+            </div>
+            <p class="modal-msg" id="modal-msg-text"></p>
+            <button class="modal-btn" onclick="closeAndGoBack()">ফিরে যান <i class="fas fa-arrow-right" style="margin-left:8px;"></i></button>
+        </div>
     </div>
 </div>
 
 <script>
     let questions = [];
-    let score = 0;
-    let answeredCount = 0; // কতগুলো উত্তর দেওয়া হয়েছে তা ট্র্যাকিং করতে
-    const chap = localStorage.getItem("chapter");
+    let scoreCount = 0; 
+    let answeredCount = 0; 
+    const chap = localStorage.getItem("chapter") || "কুইজ";
     document.getElementById("chap-name").innerText = chap;
 
-    // লোডিং মেসেজ
-    document.getElementById("quiz-container").innerHTML = "<p style='text-align:center; margin-top:50px;'>প্রশ্ন লোড হচ্ছে...</p>";
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function() { window.location.href = "chapters.html"; };
 
+    // Fetch Questions from API
     fetch(API + `?action=questions&chapter=${encodeURIComponent(chap)}`)
     .then(r => r.json())
     .then(data => {
         questions = data;
         let container = document.getElementById("quiz-container");
-        let html = "";
         
-        if(data.length === 0) {
-            container.innerHTML = "<p style='text-align:center;'>কোনো প্রশ্ন পাওয়া যায়নি।</p>";
+        if(!data || data.length === 0) {
+            container.innerHTML = "<p style='text-align:center; padding-top: 50px; font-weight:600;'>কোনো প্রশ্ন পাওয়া যায়নি।</p>";
             return;
         }
 
+        let html = "";
         data.forEach((q, qIndex) => {
             html += `<div class="q-card" id="q-block-${qIndex}">
                 <div class="question-text">${qIndex + 1}. ${q.q}</div>`;
-            q.o.forEach((opt, oIndex) => {
-                html += `<div class="option" onclick="checkAnswer(this, ${qIndex}, '${opt}', '${q.a}')">${opt}</div>`;
+            q.o.forEach((opt) => {
+                html += `<div class="option" onclick="checkAnswer(this, ${qIndex}, '${opt.replace(/'/g, "\\'")}', '${q.a.replace(/'/g, "\\'")}')">${opt}</div>`;
             });
             html += `</div>`;
         });
+        
+        // Replace loading spinner with content
         container.innerHTML = html;
+    })
+    .catch(err => {
+        document.getElementById("quiz-container").innerHTML = "<p style='text-align:center; padding-top: 50px; color:red;'>ডেটা লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।</p>";
     });
 
     function checkAnswer(element, qIndex, selected, correct) {
         let parent = document.getElementById(`q-block-${qIndex}`);
-        let allOptions = parent.querySelectorAll('.option');
+        if(parent.classList.contains('done')) return;
+        
+        parent.classList.add('done');
+        answeredCount++; 
 
-        if (selected === correct) {
+        let allOptions = parent.querySelectorAll('.option');
+        if (selected.trim() === correct.trim()) {
             element.classList.add('correct');
-            score++;
+            scoreCount++;
         } else {
             element.classList.add('wrong');
             allOptions.forEach(opt => {
-                if(opt.innerText === correct) opt.classList.add('correct');
+                if(opt.innerText.trim() === correct.trim()) opt.classList.add('correct');
             });
         }
-
         allOptions.forEach(opt => opt.classList.add('disabled'));
-        answeredCount++;
     }
 
     function showResults() {
         let total = questions.length;
         if(total === 0) return;
 
-        let percent = (score / total) * 100;
-        let msg = "";
-        let icon = "";
+        let percent = (scoreCount / total) * 100;
+        let accuracy = answeredCount > 0 ? Math.round((scoreCount / answeredCount) * 100) : 0;
         
+        document.getElementById("modal-score-text").innerText = `${scoreCount} / ${total}`;
+        document.getElementById("modal-touch-count").innerText = answeredCount;
+        document.getElementById("modal-accuracy").innerText = accuracy + "%";
+        
+        let modalContainer = document.getElementById("modal-container");
+        let icon = "";
+        let msg = "";
+
         if(percent >= 80) {
-            msg = "অসাধারণ! আপনার প্রস্তুতি খুবই ভালো। 🔥";
-            icon = "🏆";
+            modalContainer.className = "modal-content result-success";
+            icon = "🏆"; msg = "অসাধারণ! আপনার প্রস্তুতি চমৎকার।";
         } else if(percent >= 50) {
-            msg = "ভালো হচ্ছে, আরও একটু পরিশ্রম করুন! 💪";
-            icon = "😊";
+            modalContainer.className = "modal-content";
+            icon = "😊"; msg = "ভালো হয়েছে! আরও একটু চেষ্টা করুন।";
         } else {
-            msg = "মন দিয়ে পড়াশোনা করুন, হার মানবেন না! 📚";
-            icon = "👨‍🏫";
+            modalContainer.className = "modal-content result-fail";
+            icon = "📚"; msg = "মন খারাপ করবেন না, আরও পড়ুন!";
         }
 
-        // সেট আপ কাস্টম মোডাল
-        document.getElementById("modal-score-text").innerText = `${score} / ${total}`;
-        document.getElementById("modal-msg-text").innerText = msg;
         document.getElementById("modal-icon").innerText = icon;
+        document.getElementById("modal-msg-text").innerText = msg;
         document.getElementById("resultModal").style.display = "flex";
 
-        // ব্যাকএন্ডে ফলাফল পাঠানো
-        const user = localStorage.getItem("user");
-        fetch(API + `?action=submit&username=${encodeURIComponent(user)}&chapter=${encodeURIComponent(chap)}&score=${score}&total=${total}`);
+        const user = localStorage.getItem("user") || "অজানা ইউজার";
+        const queryParams = new URLSearchParams({
+            action: "submit",
+            username: user,
+            chapter: chap,
+            touch: answeredCount,
+            score: scoreCount,
+            total: total
+        });
+        fetch(API + "?" + queryParams.toString(), { mode: 'no-cors' });
     }
 
-    function closeAndGoBack() {
-        window.location.href = "chapters.html";
-    }
+    function closeAndGoBack() { window.location.href = "chapters.html"; }
 </script>
 </body>
 </html>
